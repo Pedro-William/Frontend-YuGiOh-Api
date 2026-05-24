@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Yu-Gi-Oh API</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#c9a84c;--gold-dim:#7a5f28;--bg:#09090f;--surface:#0f0f1c;
+  --surface2:#161625;--border:#1e1e35;--border-gold:rgba(201,168,76,0.3);
+  --text:#e8e4d8;--text-dim:#7a7468;
+}
+body{font-family:'Crimson Pro',Georgia,serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(ellipse at 20% 0%,rgba(201,168,76,0.04) 0%,transparent 60%),
+  radial-gradient(ellipse at 80% 100%,rgba(201,168,76,0.03) 0%,transparent 50%)}
+
+/* HEADER */
+header{border-bottom:1px solid var(--border-gold);padding:18px 32px;display:flex;align-items:center;
+  justify-content:space-between;background:linear-gradient(180deg,rgba(201,168,76,0.06) 0%,transparent 100%)}
+.header-left{display:flex;align-items:center;gap:16px}
+.header-icon{font-size:2rem}
+header h1{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);letter-spacing:3px}
+header p{font-size:0.85rem;color:var(--text-dim);font-style:italic;margin-top:2px}
+.apikey-header{display:flex;align-items:center;gap:10px}
+.apikey-header label{font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:2px;color:var(--gold);white-space:nowrap}
+.apikey-header input{padding:7px 12px;border-radius:6px;border:1px solid var(--border-gold);
+  background:var(--bg);color:var(--text);font-size:0.85rem;outline:none;width:200px;transition:border 0.2s}
+.apikey-header input:focus{border-color:var(--gold)}
+.key-status{font-size:0.8rem;white-space:nowrap}
+.key-status.ok{color:#4ade80}.key-status.err{color:#f87171}
+
+/* ENTITY TABS */
+.entity-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto}
+.entity-tab{padding:14px 28px;border:none;background:transparent;color:var(--text-dim);
+  cursor:pointer;font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:1.5px;
+  border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap}
+.entity-tab:hover{color:var(--gold)}
+.entity-tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,0.05)}
+
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 135px)}
+aside{width:220px;flex-shrink:0;border-right:1px solid var(--border);padding:20px 16px;
+  background:var(--surface);display:flex;flex-direction:column;gap:4px}
+aside h2{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:3px;color:var(--text-dim);
+  text-transform:uppercase;margin-bottom:8px;margin-top:4px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:6px;
+  border:1px solid transparent;background:transparent;color:var(--text-dim);cursor:pointer;
+  font-family:'Crimson Pro',serif;font-size:0.95rem;transition:all 0.15s;text-align:left;width:100%}
+.nav-btn:hover{color:var(--gold);border-color:var(--border-gold);background:rgba(201,168,76,0.05)}
+.nav-btn.active{color:var(--gold);border-color:var(--gold-dim);background:rgba(201,168,76,0.08)}
+main{flex:1;padding:28px 32px;overflow-y:auto}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+.page-title{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold);letter-spacing:2px;margin-bottom:4px}
+.page-sub{color:var(--text-dim);font-style:italic;font-size:0.9rem;margin-bottom:22px}
+
+/* FORM */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:24px;max-width:520px}
+.form-card h3{font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:0.75rem;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:9px 13px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);font-size:0.95rem;font-family:'Crimson Pro',serif;outline:none;transition:border 0.2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold-dim)}
+.field select option{background:var(--surface2)}
+.field textarea{resize:vertical;min-height:80px}
+.multi-select{width:100%;padding:6px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);font-size:0.9rem;min-height:100px}
+.multi-select option{padding:4px 8px}
+.field-hint{font-size:0.78rem;color:var(--text-dim);margin-top:4px;font-style:italic}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.btn{padding:8px 20px;border-radius:6px;border:1px solid var(--border-gold);background:transparent;
+  color:var(--gold);cursor:pointer;font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:1px;transition:all 0.15s}
+.btn:hover{background:rgba(201,168,76,0.12)}
+.btn.primary{background:rgba(201,168,76,0.15);border-color:var(--gold)}
+.btn.primary:hover{background:rgba(201,168,76,0.25)}
+.btn.danger{border-color:rgba(192,57,43,0.5);color:#f87171}
+.btn.danger:hover{background:rgba(192,57,43,0.15)}
+.btn.secondary{border-color:var(--border);color:var(--text-dim)}
+.btn.secondary:hover{border-color:var(--border-gold);color:var(--text)}
+.btn-sm{padding:4px 11px;border-radius:5px;border:1px solid var(--border);background:transparent;
+  cursor:pointer;font-size:0.75rem;font-family:'Cinzel',serif;transition:all 0.15s;color:var(--text-dim)}
+.btn-sm:hover{border-color:var(--border-gold);color:var(--gold)}
+.btn-sm.del:hover{border-color:rgba(192,57,43,0.5);color:#f87171}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(201,168,76,0.06);border-bottom:1px solid var(--border-gold)}
+th{padding:11px 16px;text-align:left;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:2px;color:var(--gold)}
+td{padding:11px 16px;border-bottom:1px solid var(--border);font-size:0.95rem;color:var(--text)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(201,168,76,0.03)}
+.td-actions{display:flex;gap:6px}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.75rem;
+  background:rgba(201,168,76,0.1);border:1px solid var(--border-gold);color:var(--gold)}
+.badge-type{display:inline-block;padding:2px 9px;border-radius:4px;font-size:0.75rem;font-family:'Cinzel',serif;letter-spacing:1px}
+.badge-type.MONSTRO{background:rgba(180,80,30,0.15);border:1px solid rgba(180,80,30,0.4);color:#f87171}
+.badge-type.MAGIA{background:rgba(30,130,80,0.15);border:1px solid rgba(30,130,80,0.4);color:#4ade80}
+.badge-type.ARMADILHA{background:rgba(100,30,160,0.15);border:1px solid rgba(100,30,160,0.4);color:#c084fc}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;gap:10px}
+.pagination span{color:var(--text-dim);font-size:0.85rem;font-style:italic}
+.pag-row{display:flex;justify-content:space-between;align-items:center}
+
+/* STATUS */
+.status-msg{padding:36px;text-align:center;color:var(--text-dim);font-style:italic}
+.status-msg.err{color:#f87171}
+
+/* RESULT CARD */
+.result-card{background:var(--surface);border:1px solid var(--border-gold);border-radius:10px;padding:20px 24px;max-width:480px}
+.result-card .rlabel{font-size:0.72rem;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px}
+.result-card .rvalue{font-size:1rem;color:var(--text);margin-bottom:14px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface2);border:1px solid var(--border-gold);border-radius:12px;padding:28px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
+.modal h3{font-family:'Cinzel',serif;color:var(--gold);font-size:0.95rem;letter-spacing:2px;margin-bottom:18px}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;padding:11px 18px;border-radius:8px;font-size:0.88rem;
+  font-family:'Crimson Pro',serif;border:1px solid;opacity:0;transform:translateY(10px);
+  transition:all 0.25s;pointer-events:none;z-index:999;max-width:320px}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.success{background:#0d2418;border-color:#1a6b3a;color:#4ade80}
+#toast.error{background:#1f0c0c;border-color:#7f1d1d;color:#f87171}
+#toast.info{background:#0f1020;border-color:var(--gold-dim);color:var(--gold)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-icon">🃏</div>
+    <div><h1>YU-GI-OH API</h1><p>Painel de gerenciamento</p></div>
+  </div>
+  <div class="apikey-header">
+    <label>CHAVE DE API</label>
+    <input type="password" id="inputApiKey" placeholder="x-api-key" oninput="salvarChave()"/>
+    <span class="key-status" id="statusChave"></span>
+  </div>
+</header>
+
+<div class="entity-tabs">
+  <button class="entity-tab active" onclick="mudarEntidade('atributos',this)">⚡ ATRIBUTOS</button>
+  <button class="entity-tab" onclick="mudarEntidade('cartas',this)">🃏 CARTAS</button>
+  <button class="entity-tab" onclick="mudarEntidade('colecoes',this)">📦 COLEÇÕES</button>
+  <button class="entity-tab" onclick="mudarEntidade('efeitos',this)">✨ EFEITOS</button>
+  <button class="entity-tab" onclick="mudarEntidade('decks',this)">🗂 DECKS</button>
+</div>
+
+<div class="layout">
+  <aside id="aside">
+    <h2 id="aside-title">Atributos</h2>
+    <button class="nav-btn active" onclick="navegar('listar',this)"><span>📋</span> Listar todos</button>
+    <button class="nav-btn" onclick="navegar('buscarNome',this)"><span>🔍</span> Buscar por nome</button>
+    <button class="nav-btn" onclick="navegar('buscarId',this)"><span>#</span> Buscar por ID</button>
+    <button class="nav-btn" onclick="navegar('criar',this)"><span>✦</span> Cadastrar</button>
+  </aside>
+
+  <main>
+
+    <!-- ════ LISTAR ════ -->
+    <div id="page-listar" class="page active">
+      <div class="page-title" id="title-listar">Todos os Atributos</div>
+      <div class="page-sub" id="sub-listar">Listagem paginada</div>
+      <div class="table-wrap"><table>
+        <thead><tr id="thead-row"></tr></thead>
+        <tbody id="tbody-listar"><tr><td colspan="10"><div class="status-msg">Carregando...</div></td></tr></tbody>
+      </table></div>
+      <div class="pag-row">
+        <div class="pagination">
+          <button class="btn secondary" id="btn-prev" onclick="mudarPagina(-1)" disabled>← Anterior</button>
+          <span id="info-pagina">Página 1</span>
+          <button class="btn secondary" id="btn-next" onclick="mudarPagina(1)">Próximo →</button>
+        </div>
+        <button class="btn" onclick="carregarLista(paginaAtual)">↻ Atualizar</button>
+      </div>
+    </div>
+
+    <!-- ════ BUSCAR NOME ════ -->
+    <div id="page-buscarNome" class="page">
+      <div class="page-title">Buscar por <span id="label-busca-campo">Nome</span></div>
+      <div class="page-sub">Pesquise pelo campo de texto</div>
+      <div class="form-card">
+        <h3>Pesquisa</h3>
+        <div class="field">
+          <label id="label-busca-input">Nome</label>
+          <input type="text" id="input-busca-nome" onkeydown="if(event.key==='Enter')buscarPorCampo()"/>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="buscarPorCampo()">Buscar</button>
+          <button class="btn secondary" onclick="document.getElementById('input-busca-nome').value='';document.getElementById('resultado-nome').innerHTML=''">Limpar</button>
+        </div>
+      </div>
+      <div id="resultado-nome"></div>
+    </div>
+
+    <!-- ════ BUSCAR ID ════ -->
+    <div id="page-buscarId" class="page">
+      <div class="page-title">Buscar por ID</div>
+      <div class="page-sub">Encontre um registro pelo identificador</div>
+      <div class="form-card">
+        <h3>Pesquisa</h3>
+        <div class="field"><label>ID</label>
+          <input type="number" id="input-busca-id" onkeydown="if(event.key==='Enter')buscarPorId()"/>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="buscarPorId()">Buscar</button>
+          <button class="btn secondary" onclick="document.getElementById('input-busca-id').value='';document.getElementById('resultado-id').innerHTML=''">Limpar</button>
+        </div>
+      </div>
+      <div id="resultado-id"></div>
+    </div>
+
+    <!-- ════ CRIAR ════ -->
+    <div id="page-criar" class="page">
+      <div class="page-title" id="title-criar">Cadastrar Atributo</div>
+      <div class="page-sub" id="sub-criar">Adicione um novo registro ao sistema</div>
+      <div class="form-card">
+        <h3>Novo Registro</h3>
+        <div id="form-criar-campos"></div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="criar()">Cadastrar</button>
+          <button class="btn secondary" onclick="renderFormCriar()">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ════ MODAL EDITAR ════ -->
+<div class="modal-overlay" id="modal-editar">
+  <div class="modal">
+    <h3 id="modal-title">✦ EDITAR</h3>
+    <div id="modal-campos"></div>
+    <input type="hidden" id="modal-id"/>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn primary" onclick="confirmarEdicao()">Salvar</button>
+      <button class="btn secondary" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  CONFIGURAÇÃO
+// ══════════════════════════════════════════
+const API_URL = "https://yugioh-rest-api.onrender.com";
+
+// ══════════════════════════════════════════
+
+const ENTIDADES = {
+  atributos: {
+    label:'Atributos', endpoint:'/atributos', campoBusca:'nome',
+    colunas:['ID','Nome','Ações'],
+    renderLinha: a => `<td><span class="badge">${a.id}</span></td><td>${a.nome}</td>`,
+    renderResultado: a => `<div class="rlabel">ID</div><div class="rvalue"><span class="badge">${a.id}</span></div><div class="rlabel">Nome</div><div class="rvalue">${a.nome}</div>`,
+    formCriar: () => `<div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: LUZ, TREVAS..."/></div>`,
+    formEditar: a => `<div class="field"><label>Nome</label><input type="text" id="m-nome" value="${a.nome}"/></div>`,
+    bodyPost: () => ({nome: v('f-nome')}),
+    bodyPut: () => ({nome: v('m-nome')}),
+  },
+  cartas: {
+    label:'Cartas', endpoint:'/cards', campoBusca:'nome',
+    colunas:['ID','Nome','Tipo','Atributo','Ações'],
+    renderLinha: a => `<td><span class="badge">${a.id}</span></td><td>${a.nome}</td>
+      <td><span class="badge-type ${a.tipo}">${a.tipo??'—'}</span></td>
+      <td>${a.atributo?.nome??'—'}</td>`,
+    renderResultado: a => `
+      <div class="rlabel">ID</div><div class="rvalue"><span class="badge">${a.id}</span></div>
+      <div class="rlabel">Nome</div><div class="rvalue">${a.nome}</div>
+      <div class="rlabel">Tipo</div><div class="rvalue"><span class="badge-type ${a.tipo}">${a.tipo??'—'}</span></div>
+      <div class="rlabel">Atributo</div><div class="rvalue">${a.atributo?.nome??'—'}</div>
+      <div class="rlabel">Coleção</div><div class="rvalue">${a.colecao?.nome??'—'}</div>
+      <div class="rlabel">Efeitos</div><div class="rvalue">${(a.efeitos??[]).map(e=>e.descricao).join(', ')||'—'}</div>`,
+    formCriar: async () => {
+      const [ats,cols,efs] = await Promise.all([listarTodos('/atributos'),listarTodos('/colecoes'),listarTodos('/efeitos')]);
+      return `
+        <div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: Dragão Branco de Olhos Azuis"/></div>
+        <div class="field"><label>Tipo</label><select id="f-tipo">
+          <option value="">-- Selecione --</option>
+          <option value="MONSTRO">MONSTRO</option><option value="MAGIA">MAGIA</option><option value="ARMADILHA">ARMADILHA</option>
+        </select></div>
+        <div class="field"><label>Atributo</label><select id="f-atributo">
+          <option value="">-- Selecione --</option>
+          ${ats.map(a=>`<option value="${a.id}">${a.nome}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Coleção</label><select id="f-colecao">
+          <option value="">-- Selecione --</option>
+          ${cols.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Efeitos <span style="color:var(--text-dim)">(Ctrl+clique para múltiplos)</span></label>
+          <select id="f-efeitos" multiple class="multi-select">
+            ${efs.map(e=>`<option value="${e.id}">${e.descricao}</option>`).join('')}
+          </select></div>`;
+    },
+    formEditar: async (a) => {
+      const [ats,cols,efs] = await Promise.all([listarTodos('/atributos'),listarTodos('/colecoes'),listarTodos('/efeitos')]);
+      const efIds = (a.efeitos??[]).map(e=>e.id);
+      return `
+        <div class="field"><label>Nome</label><input type="text" id="m-nome" value="${a.nome}"/></div>
+        <div class="field"><label>Tipo</label><select id="m-tipo">
+          <option value="">-- Selecione --</option>
+          ${['MONSTRO','MAGIA','ARMADILHA'].map(t=>`<option value="${t}" ${a.tipo===t?'selected':''}>${t}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Atributo</label><select id="m-atributo">
+          <option value="">-- Selecione --</option>
+          ${ats.map(at=>`<option value="${at.id}" ${a.atributo?.id===at.id?'selected':''}>${at.nome}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Coleção</label><select id="m-colecao">
+          <option value="">-- Selecione --</option>
+          ${cols.map(c=>`<option value="${c.id}" ${a.colecao?.id===c.id?'selected':''}>${c.nome}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Efeitos <span style="color:var(--text-dim)">(Ctrl+clique para múltiplos)</span></label>
+          <select id="m-efeitos" multiple class="multi-select">
+            ${efs.map(e=>`<option value="${e.id}" ${efIds.includes(e.id)?'selected':''}>${e.descricao}</option>`).join('')}
+          </select></div>`;
+    },
+    bodyPost: () => {
+      const efIds = [...document.getElementById('f-efeitos').selectedOptions].map(o=>({id:Number(o.value)}));
+      const atId = v('f-atributo'); const colId = v('f-colecao');
+      return {nome:v('f-nome'),tipo:v('f-tipo'),
+        atributo: atId ? {id:Number(atId)} : null,
+        colecao: colId ? {id:Number(colId)} : null,
+        efeitos: efIds};
+    },
+    bodyPut: () => {
+      const efIds = [...document.getElementById('m-efeitos').selectedOptions].map(o=>({id:Number(o.value)}));
+      const atId = v('m-atributo'); const colId = v('m-colecao');
+      return {nome:v('m-nome'),tipo:v('m-tipo'),
+        atributo: atId ? {id:Number(atId)} : null,
+        colecao: colId ? {id:Number(colId)} : null,
+        efeitos: efIds};
+    },
+  },
+  colecoes: {
+    label:'Coleções', endpoint:'/colecoes', campoBusca:'nome',
+    colunas:['ID','Nome','Ações'],
+    renderLinha: a => `<td><span class="badge">${a.id}</span></td><td>${a.nome}</td>`,
+    renderResultado: a => `<div class="rlabel">ID</div><div class="rvalue"><span class="badge">${a.id}</span></div><div class="rlabel">Nome</div><div class="rvalue">${a.nome}</div>`,
+    formCriar: () => `<div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: Starter Deck, Legend of Blue Eyes..."/></div>`,
+    formEditar: a => `<div class="field"><label>Nome</label><input type="text" id="m-nome" value="${a.nome}"/></div>`,
+    bodyPost: () => ({nome: v('f-nome')}),
+    bodyPut: () => ({nome: v('m-nome')}),
+  },
+  efeitos: {
+    label:'Efeitos', endpoint:'/efeitos', campoBusca:'descricao',
+    colunas:['ID','Descrição','Ações'],
+    renderLinha: a => `<td><span class="badge">${a.id}</span></td><td>${a.descricao}</td>`,
+    renderResultado: a => `<div class="rlabel">ID</div><div class="rvalue"><span class="badge">${a.id}</span></div><div class="rlabel">Descrição</div><div class="rvalue">${a.descricao}</div>`,
+    formCriar: () => `<div class="field"><label>Descrição</label><textarea id="f-descricao" placeholder="Ex: Aumenta o ataque em 500 pontos"></textarea></div>`,
+    formEditar: a => `<div class="field"><label>Descrição</label><textarea id="m-descricao">${a.descricao}</textarea></div>`,
+    bodyPost: () => ({descricao: v('f-descricao')}),
+    bodyPut: () => ({descricao: v('m-descricao')}),
+  },
+  decks: {
+    label:'Decks', endpoint:'/decks', campoBusca:'nome',
+    colunas:['ID','Nome','Cartas','Ações'],
+    renderLinha: a => `<td><span class="badge">${a.id}</span></td><td>${a.nome}</td><td>${(a.cartas??[]).length} carta(s)</td>`,
+    renderResultado: a => `
+      <div class="rlabel">ID</div><div class="rvalue"><span class="badge">${a.id}</span></div>
+      <div class="rlabel">Nome</div><div class="rvalue">${a.nome}</div>
+      <div class="rlabel">Cartas</div><div class="rvalue">${(a.cartas??[]).map(c=>c.nome).join(', ')||'—'}</div>`,
+    formCriar: async () => {
+      const cartas = await listarTodos('/cards');
+      return `
+        <div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: Deck Principal"/></div>
+        <div class="field"><label>Cartas <span style="color:var(--text-dim)">(Ctrl+clique para múltiplas)</span></label>
+          <select id="f-cartas" multiple class="multi-select">
+            ${cartas.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}
+          </select></div>`;
+    },
+    formEditar: async (a) => {
+      const cartas = await listarTodos('/cards');
+      const cartaIds = (a.cartas??[]).map(c=>c.id);
+      return `
+        <div class="field"><label>Nome</label><input type="text" id="m-nome" value="${a.nome}"/></div>
+        <div class="field"><label>Cartas <span style="color:var(--text-dim)">(Ctrl+clique para múltiplas)</span></label>
+          <select id="m-cartas" multiple class="multi-select">
+            ${cartas.map(c=>`<option value="${c.id}" ${cartaIds.includes(c.id)?'selected':''}>${c.nome}</option>`).join('')}
+          </select></div>`;
+    },
+    bodyPost: () => {
+      const ids = [...document.getElementById('f-cartas').selectedOptions].map(o=>({id:Number(o.value)}));
+      return {nome:v('f-nome'), cartas:ids};
+    },
+    bodyPut: () => {
+      const ids = [...document.getElementById('m-cartas').selectedOptions].map(o=>({id:Number(o.value)}));
+      return {nome:v('m-nome'), cartas:ids};
+    },
+  },
+};
+
+let entidadeAtual = 'atributos';
+let paginaAtual = 0;
+let totalPaginas = 1;
+let itemEditando = null;
+
+// ── HELPERS ──
+const v = id => (document.getElementById(id)?.value??'').trim();
+function getChave(){ return localStorage.getItem('yugioh_api_key')||''; }
+function headers(){ return {'Content-Type':'application/json','x-api-key':getChave()}; }
+
+async function listarTodos(endpoint) {
+  try {
+    const res = await fetch(`${API_URL}${endpoint}?page=0&size=100`, {headers:headers()});
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data?._embedded ? Object.values(data._embedded)[0] : data?.content ?? [];
+  } catch { return []; }
+}
+
+function extrairItens(data){
+  return data?._embedded ? Object.values(data._embedded)[0] : data?.content ?? [];
+}
+
+// ── API KEY ──
+function salvarChave(){
+  localStorage.setItem('yugioh_api_key', document.getElementById('inputApiKey').value);
+  verificarChave();
+}
+async function verificarChave(){
+  const chave = getChave();
+  const el = document.getElementById('statusChave');
+  if (!chave){ el.textContent=''; el.className='key-status'; return; }
+  try {
+    const res = await fetch(`${API_URL}/atributos?page=0&size=1`,{headers:headers()});
+    if (res.ok){ el.textContent='✓ Válida'; el.className='key-status ok'; }
+    else if(res.status===401){ el.textContent='✗ Inválida'; el.className='key-status err'; }
+    else { el.textContent='⚠ Erro'; el.className='key-status err'; }
+  } catch { el.textContent='API indisponível'; el.className='key-status err'; }
+}
+
+// ── NAVEGAÇÃO ENTIDADE ──
+function mudarEntidade(ent, btn) {
+  entidadeAtual = ent;
+  paginaAtual = 0;
+  document.querySelectorAll('.entity-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const cfg = ENTIDADES[ent];
+  document.getElementById('aside-title').textContent = cfg.label;
+
+  // reset nav
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{
+    b.classList.toggle('active', i===0);
+  });
+
+  // update busca label
+  const campo = cfg.campoBusca === 'descricao' ? 'Descrição' : 'Nome';
+  document.getElementById('label-busca-campo').textContent = campo;
+  document.getElementById('label-busca-input').textContent = campo;
+  document.getElementById('input-busca-nome').placeholder = `Ex: ${cfg.label}...`;
+
+  // clear
+  document.getElementById('resultado-nome').innerHTML='';
+  document.getElementById('resultado-id').innerHTML='';
+  document.getElementById('input-busca-nome').value='';
+  document.getElementById('input-busca-id').value='';
+
+  // update titles
+  document.getElementById('title-listar').textContent = `Todos os ${cfg.label}`;
+  document.getElementById('title-criar').textContent = `Cadastrar ${cfg.label.slice(0,-1)||cfg.label}`;
+
+  mostrarPagina('listar');
+  carregarLista(0);
+  renderFormCriar();
+}
+
+// ── NAVEGAÇÃO OPERAÇÃO ──
+function navegar(pagina, btn) {
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  mostrarPagina(pagina);
+  if (pagina==='listar') carregarLista(paginaAtual);
+}
+
+function mostrarPagina(pagina) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+pagina).classList.add('active');
+}
+
+// ── TOAST ──
+let tt;
+function toast(msg,tipo='info'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`show ${tipo}`;
+  clearTimeout(tt); tt=setTimeout(()=>el.className='',3500);
+}
+
+// ── LISTAR ──
+async function carregarLista(pagina) {
+  paginaAtual=pagina;
+  const cfg=ENTIDADES[entidadeAtual];
+  const tbody=document.getElementById('tbody-listar');
+
+  // render colunas
+  document.getElementById('thead-row').innerHTML=cfg.colunas.map(c=>`<th>${c}</th>`).join('');
+
+  tbody.innerHTML=`<tr><td colspan="${cfg.colunas.length}"><div class="status-msg">Carregando...</div></td></tr>`;
+
+  try {
+    const res = await fetch(`${API_URL}${cfg.endpoint}?page=${pagina}&size=8`,{headers:headers()});
+    if (res.status===401){
+      tbody.innerHTML=`<tr><td colspan="${cfg.colunas.length}"><div class="status-msg err">Chave de API inválida.</div></td></tr>`;
+      return;
+    }
+    if (!res.ok) throw new Error(res.status);
+    const data=await res.json();
+    const itens=extrairItens(data);
+    const page=data?.page??{number:0,totalPages:1,totalElements:0};
+    totalPaginas=page.totalPages??1;
+
+    document.getElementById('info-pagina').textContent=`Página ${page.number+1} de ${totalPaginas} (${page.totalElements} registros)`;
+    document.getElementById('btn-prev').disabled=page.number===0;
+    document.getElementById('btn-next').disabled=page.number>=totalPaginas-1;
+
+    if (!itens.length){
+      tbody.innerHTML=`<tr><td colspan="${cfg.colunas.length}"><div class="status-msg">Nenhum registro encontrado.</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML=itens.map(item=>`
+      <tr>
+        ${cfg.renderLinha(item)}
+        <td><div class="td-actions">
+          <button class="btn-sm" onclick='abrirModal(${JSON.stringify(item)})'>✎ Editar</button>
+          <button class="btn-sm del" onclick="deletar(${item.id},'${(item.nome||item.descricao||'').replace(/'/g,"\\'")}')">✕ Excluir</button>
+        </div></td>
+      </tr>`).join('');
+  } catch(e){
+    tbody.innerHTML=`<tr><td colspan="${cfg.colunas.length}"><div class="status-msg err">Erro ao carregar: ${e.message}</div></td></tr>`;
+  }
+}
+
+function mudarPagina(dir){ carregarLista(paginaAtual+dir); }
+
+// ── BUSCAR CAMPO ──
+async function buscarPorCampo(){
+  const cfg=ENTIDADES[entidadeAtual];
+  const termo=document.getElementById('input-busca-nome').value.trim();
+  if (!termo){ toast('Digite um valor para buscar.','error'); return; }
+  const div=document.getElementById('resultado-nome');
+  div.innerHTML=`<div class="status-msg">Buscando...</div>`;
+  try {
+    const res=await fetch(`${API_URL}${cfg.endpoint}/buscar?${cfg.campoBusca}=${encodeURIComponent(termo)}&page=0&size=20`,{headers:headers()});
+    if (res.status===401){ div.innerHTML=`<div class="status-msg err">Chave de API inválida.</div>`; return; }
+    if (res.status===404){ div.innerHTML=`<div class="status-msg">Nenhum resultado para "<strong>${termo}</strong>".</div>`; return; }
+    if (!res.ok) throw new Error(res.status);
+    const data=await res.json();
+    const itens=extrairItens(data);
+    if (!itens.length){ div.innerHTML=`<div class="status-msg">Nenhum resultado.</div>`; return; }
+    div.innerHTML=`<div class="table-wrap"><table>
+      <thead><tr>${cfg.colunas.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${itens.map(item=>`<tr>${cfg.renderLinha(item)}
+        <td><div class="td-actions">
+          <button class="btn-sm" onclick='abrirModal(${JSON.stringify(item)})'>✎ Editar</button>
+          <button class="btn-sm del" onclick="deletar(${item.id},'${(item.nome||item.descricao||'').replace(/'/g,"\\'")}')">✕ Excluir</button>
+        </div></td></tr>`).join('')}
+      </tbody></table></div>`;
+  } catch(e){ div.innerHTML=`<div class="status-msg err">Erro: ${e.message}</div>`; }
+}
+
+// ── BUSCAR ID ──
+async function buscarPorId(){
+  const cfg=ENTIDADES[entidadeAtual];
+  const id=document.getElementById('input-busca-id').value.trim();
+  if (!id){ toast('Digite um ID.','error'); return; }
+  const div=document.getElementById('resultado-id');
+  div.innerHTML=`<div class="status-msg">Buscando...</div>`;
+  try {
+    const res=await fetch(`${API_URL}${cfg.endpoint}/${id}`,{headers:headers()});
+    if (res.status===401){ div.innerHTML=`<div class="status-msg err">Chave de API inválida.</div>`; return; }
+    if (res.status===404){ div.innerHTML=`<div class="status-msg">Nenhum registro com ID ${id}.</div>`; return; }
+    if (!res.ok) throw new Error(res.status);
+    const item=await res.json();
+    div.innerHTML=`<div class="result-card">
+      ${cfg.renderResultado(item)}
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn primary" onclick='abrirModal(${JSON.stringify(item)})'>✎ Editar</button>
+        <button class="btn danger" onclick="deletar(${item.id},'${(item.nome||item.descricao||'').replace(/'/g,"\\'")}')">✕ Excluir</button>
+      </div></div>`;
+  } catch(e){ div.innerHTML=`<div class="status-msg err">Erro: ${e.message}</div>`; }
+}
+
+// ── CRIAR ──
+async function renderFormCriar(){
+  const cfg=ENTIDADES[entidadeAtual];
+  const div=document.getElementById('form-criar-campos');
+  div.innerHTML=`<div class="status-msg">Carregando campos...</div>`;
+  const html=await cfg.formCriar();
+  div.innerHTML=html;
+}
+
+async function criar(){
+  const cfg=ENTIDADES[entidadeAtual];
+  const body=cfg.bodyPost();
+  const principal=body.nome||body.descricao||'';
+  if (!principal){ toast('Preencha o campo obrigatório.','error'); return; }
+  try {
+    const res=await fetch(`${API_URL}${cfg.endpoint}`,{
+      method:'POST',
+      headers:{...headers(),'X-Idempotency-Key':crypto.randomUUID()},
+      body:JSON.stringify(body)
+    });
+    if (res.status===401){ toast('Chave de API inválida.','error'); return; }
+    if (!res.ok) throw new Error(res.status);
+    toast(`Cadastrado com sucesso!`,'success');
+    renderFormCriar();
+  } catch(e){ toast(`Erro ao cadastrar: ${e.message}`,'error'); }
+}
+
+// ── MODAL ──
+async function abrirModal(item){
+  if (typeof item === 'string') item = JSON.parse(item);
+  itemEditando = item;
+  const cfg=ENTIDADES[entidadeAtual];
+  document.getElementById('modal-title').textContent=`✦ EDITAR ${cfg.label.slice(0,-1).toUpperCase()||cfg.label.toUpperCase()}`;
+  document.getElementById('modal-id').value=item.id;
+  document.getElementById('modal-campos').innerHTML=`<div class="status-msg">Carregando...</div>`;
+  document.getElementById('modal-editar').classList.add('open');
+  const html=await cfg.formEditar(item);
+  document.getElementById('modal-campos').innerHTML=html;
+}
+
+function fecharModal(){ document.getElementById('modal-editar').classList.remove('open'); }
+
+async function confirmarEdicao(){
+  const cfg=ENTIDADES[entidadeAtual];
+  const id=document.getElementById('modal-id').value;
+  const body=cfg.bodyPut();
+  const principal=body.nome||body.descricao||'';
+  if (!principal){ toast('O campo principal não pode ficar vazio.','error'); return; }
+  try {
+    const res=await fetch(`${API_URL}${cfg.endpoint}/${id}`,{method:'PUT',headers:headers(),body:JSON.stringify(body)});
+    if (res.status===401){ toast('Chave de API inválida.','error'); return; }
+    if (res.status===404){ toast('Registro não encontrado.','error'); return; }
+    if (!res.ok) throw new Error(res.status);
+    toast('Atualizado com sucesso!','success');
+    fecharModal();
+    carregarLista(paginaAtual);
+  } catch(e){ toast(`Erro ao editar: ${e.message}`,'error'); }
+}
+
+// ── DELETAR ──
+async function deletar(id, nome){
+  if (!confirm(`Excluir "${nome}"?`)) return;
+  const cfg=ENTIDADES[entidadeAtual];
+  try {
+    const res=await fetch(`${API_URL}${cfg.endpoint}/${id}`,{method:'DELETE',headers:headers()});
+    if (res.status===401){ toast('Chave de API inválida.','error'); return; }
+    if (res.status===404){ toast('Registro não encontrado.','error'); return; }
+    if (!res.ok) throw new Error(res.status);
+    toast(`"${nome}" excluído.`,'success');
+    carregarLista(paginaAtual);
+  } catch(e){ toast(`Erro ao excluir: ${e.message}`,'error'); }
+}
+
+// ── INIT ──
+window.addEventListener('click', e=>{ if(e.target===document.getElementById('modal-editar')) fecharModal(); });
+const chaveSalva=localStorage.getItem('yugioh_api_key');
+if (chaveSalva) document.getElementById('inputApiKey').value=chaveSalva;
+verificarChave();
+carregarLista(0);
+renderFormCriar();
+</script>
+</body>
+</html>
