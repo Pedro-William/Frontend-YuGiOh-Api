@@ -266,7 +266,13 @@ const ENTIDADES = {
     colunas:['ID','Nome','Ações'],
     renderLinha: a => `<td><span class="badge">${a.id}</span></td><td>${a.nome}</td>`,
     renderResultado: a => `<div class="rlabel">ID</div><div class="rvalue"><span class="badge">${a.id}</span></div><div class="rlabel">Nome</div><div class="rvalue">${a.nome}</div>`,
-    formCriar: () => `<div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: LUZ, TREVAS..."/></div>`,
+    formCriar: () => `
+  <div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: LUZ, TREVAS..."/></div>
+  <div class="field">
+    <label>Chave de Idempotência</label>
+    <input type="text" id="f-idempotency" placeholder="Ex: cadastro-atributo-001"/>
+    <div class="field-hint">Use a mesma chave para evitar cadastros duplicados em caso de reenvio.</div>
+  </div>`,
     formEditar: a => `<div class="field"><label>Nome</label><input type="text" id="m-nome" value="${a.nome}"/></div>`,
     bodyPost: () => ({nome: v('f-nome')}),
     bodyPut: () => ({nome: v('m-nome')}),
@@ -303,7 +309,12 @@ const ENTIDADES = {
         <div class="field"><label>Efeitos <span style="color:var(--text-dim)">(Ctrl+clique para múltiplos)</span></label>
           <select id="f-efeitos" multiple class="multi-select">
             ${efs.map(e=>`<option value="${e.id}">${e.descricao}</option>`).join('')}
-          </select></div>`;
+          </select></div>
+        <div class="field">
+          <label>Chave de Idempotência</label>
+          <input type="text" id="f-idempotency" placeholder="Ex: cadastro-carta-001"/>
+          <div class="field-hint">Use a mesma chave para evitar cadastros duplicados em caso de reenvio.</div>
+        </div>`;
     },
     formEditar: async (a) => {
       const [ats,cols,efs] = await Promise.all([listarTodos('/atributos'),listarTodos('/colecoes'),listarTodos('/efeitos')]);
@@ -349,7 +360,13 @@ const ENTIDADES = {
     colunas:['ID','Nome','Ações'],
     renderLinha: a => `<td><span class="badge">${a.id}</span></td><td>${a.nome}</td>`,
     renderResultado: a => `<div class="rlabel">ID</div><div class="rvalue"><span class="badge">${a.id}</span></div><div class="rlabel">Nome</div><div class="rvalue">${a.nome}</div>`,
-    formCriar: () => `<div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: Starter Deck, Legend of Blue Eyes..."/></div>`,
+formCriar: () => `
+  <div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Ex: Starter Deck, Legend of Blue Eyes..."/></div>
+  <div class="field">
+    <label>Chave de Idempotência</label>
+    <input type="text" id="f-idempotency" placeholder="Ex: cadastro-colecao-001"/>
+    <div class="field-hint">Use a mesma chave para evitar cadastros duplicados em caso de reenvio.</div>
+  </div>`,
     formEditar: a => `<div class="field"><label>Nome</label><input type="text" id="m-nome" value="${a.nome}"/></div>`,
     bodyPost: () => ({nome: v('f-nome')}),
     bodyPut: () => ({nome: v('m-nome')}),
@@ -359,8 +376,13 @@ const ENTIDADES = {
     colunas:['ID','Descrição','Ações'],
     renderLinha: a => `<td><span class="badge">${a.id}</span></td><td>${a.descricao}</td>`,
     renderResultado: a => `<div class="rlabel">ID</div><div class="rvalue"><span class="badge">${a.id}</span></div><div class="rlabel">Descrição</div><div class="rvalue">${a.descricao}</div>`,
-    formCriar: () => `<div class="field"><label>Descrição</label><textarea id="f-descricao" placeholder="Ex: Aumenta o ataque em 500 pontos"></textarea></div>`,
-    formEditar: a => `<div class="field"><label>Descrição</label><textarea id="m-descricao">${a.descricao}</textarea></div>`,
+formCriar: () => `
+  <div class="field"><label>Descrição</label><textarea id="f-descricao" placeholder="Ex: Aumenta o ataque em 500 pontos"></textarea></div>
+  <div class="field">
+    <label>Chave de Idempotência</label>
+    <input type="text" id="f-idempotency" placeholder="Ex: cadastro-efeito-001"/>
+    <div class="field-hint">Use a mesma chave para evitar cadastros duplicados em caso de reenvio.</div>
+  </div>`,    formEditar: a => `<div class="field"><label>Descrição</label><textarea id="m-descricao">${a.descricao}</textarea></div>`,
     bodyPost: () => ({descricao: v('f-descricao')}),
     bodyPut: () => ({descricao: v('m-descricao')}),
   },
@@ -379,7 +401,12 @@ const ENTIDADES = {
         <div class="field"><label>Cartas <span style="color:var(--text-dim)">(Ctrl+clique para múltiplas)</span></label>
           <select id="f-cartas" multiple class="multi-select">
             ${cartas.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}
-          </select></div>`;
+          </select></div>
+        <div class="field">
+          <label>Chave de Idempotência</label>
+          <input type="text" id="f-idempotency" placeholder="Ex: cadastro-deck-001"/>
+          <div class="field-hint">Use a mesma chave para evitar cadastros duplicados em caso de reenvio.</div>
+        </div>`;
     },
     formEditar: async (a) => {
       const cartas = await listarTodos('/cards');
@@ -602,22 +629,26 @@ async function renderFormCriar(){
   div.innerHTML=html;
 }
 
-async function criar(){
-  const cfg=ENTIDADES[entidadeAtual];
-  const body=cfg.bodyPost();
-  const principal=body.nome||body.descricao||'';
-  if (!principal){ toast('Preencha o campo obrigatório.','error'); return; }
+async function criar() {
+  const cfg = ENTIDADES[entidadeAtual];
+  const body = cfg.bodyPost();
+  const principal = body.nome || body.descricao || '';
+  if (!principal) { toast('Preencha o campo obrigatório.', 'error'); return; }
+
+  const idempotencyKey = v('f-idempotency');
+  if (!idempotencyKey) { toast('Preencha a chave de idempotência.', 'error'); return; } // ← validação
+
   try {
-    const res=await fetch(`${API_URL}${cfg.endpoint}`,{
-      method:'POST',
-      headers:{...headers(),'X-Idempotency-Key':crypto.randomUUID()},
-      body:JSON.stringify(body)
+    const res = await fetch(`${API_URL}${cfg.endpoint}`, {
+      method: 'POST',
+      headers: { ...headers(), 'X-Idempotency-Key': idempotencyKey },
+      body: JSON.stringify(body)
     });
-    if (res.status===401){ toast('Chave de API inválida.','error'); return; }
+    if (res.status === 401) { toast('Chave de API inválida.', 'error'); return; }
     if (!res.ok) throw new Error(res.status);
-    toast(`Cadastrado com sucesso!`,'success');
+    toast('Cadastrado com sucesso!', 'success');
     renderFormCriar();
-  } catch(e){ toast(`Erro ao cadastrar: ${e.message}`,'error'); }
+  } catch(e) { toast(`Erro ao cadastrar: ${e.message}`, 'error'); }
 }
 
 // ── MODAL ──
